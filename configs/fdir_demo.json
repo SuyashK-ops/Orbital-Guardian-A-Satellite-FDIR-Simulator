@@ -1,0 +1,36 @@
+{
+  "scenario_name": "multi_fault_fdir_demo",
+  "description": "Combined power, thermal, and attitude anomalies intended for portfolio demonstrations and notebook comparisons.",
+  "simulation": {
+    "duration_minutes": 900,
+    "step_minutes": 1,
+    "orbit_period_minutes": 95,
+    "sunlight_fraction": 0.62,
+    "start_in_sunlight": true
+  },
+  "mode_schedule": [
+    { "start_minute": 0, "mode": "nominal" },
+    { "start_minute": 160, "mode": "science" },
+    { "start_minute": 520, "mode": "nominal" }
+  ],
+  "faults": [
+    {
+      "type": "solar_array_degradation",
+      "name": "degraded_deployable_array",
+      "start_minute": 210,
+      "solar_scale": 0.58
+    },
+    {
+      "type": "reaction_wheel_anomaly",
+      "name": "wheel_momentum_bias",
+      "start_minute": 360,
+      "extra_spin_rpm_per_min": 30.0
+    },
+    {
+      "type": "heater_stuck_on",
+      "name": "heater_relay_failure",
+      "start_minute": 540,
+      "thermal_bias_w": 9.0
+    }
+  ]
+}

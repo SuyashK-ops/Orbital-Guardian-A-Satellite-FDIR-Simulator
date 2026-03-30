@@ -1,0 +1,18 @@
+{
+  "scenario_name": "nominal_reference",
+  "description": "Baseline small-satellite mission profile with eclipse cycling, a science window, and no injected faults.",
+  "simulation": {
+    "duration_minutes": 720,
+    "step_minutes": 1,
+    "orbit_period_minutes": 95,
+    "sunlight_fraction": 0.62,
+    "start_in_sunlight": true
+  },
+  "mode_schedule": [
+    { "start_minute": 0, "mode": "nominal" },
+    { "start_minute": 180, "mode": "science" },
+    { "start_minute": 420, "mode": "nominal" }
+  ],
+  "faults": []
+}
+

@@ -1,0 +1,31 @@
+{
+  "scenario_name": "power_chain_anomaly",
+  "description": "Solar array degradation followed by an unexpected bus load spike to exercise power-aware fault detection and charging recovery.",
+  "simulation": {
+    "duration_minutes": 720,
+    "step_minutes": 1,
+    "orbit_period_minutes": 95,
+    "sunlight_fraction": 0.62,
+    "start_in_sunlight": true
+  },
+  "mode_schedule": [
+    { "start_minute": 0, "mode": "nominal" },
+    { "start_minute": 180, "mode": "science" },
+    { "start_minute": 420, "mode": "nominal" }
+  ],
+  "faults": [
+    {
+      "type": "solar_array_degradation",
+      "name": "panel_output_loss",
+      "start_minute": 240,
+      "solar_scale": 0.52
+    },
+    {
+      "type": "load_spike",
+      "name": "payload_bus_power_spike",
+      "start_minute": 360,
+      "extra_load_w": 20.0
+    }
+  ]
+}
+

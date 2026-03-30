@@ -1,0 +1,31 @@
+{
+  "scenario_name": "thermal_sensor_anomaly",
+  "description": "Temperature sensor drift plus a stuck-on heater to demonstrate why thresholding alone is insufficient.",
+  "simulation": {
+    "duration_minutes": 720,
+    "step_minutes": 1,
+    "orbit_period_minutes": 95,
+    "sunlight_fraction": 0.62,
+    "start_in_sunlight": true
+  },
+  "mode_schedule": [
+    { "start_minute": 0, "mode": "nominal" },
+    { "start_minute": 180, "mode": "science" },
+    { "start_minute": 420, "mode": "nominal" }
+  ],
+  "faults": [
+    {
+      "type": "temperature_sensor_drift",
+      "name": "temp_sensor_bias_growth",
+      "start_minute": 260,
+      "drift_c_per_hour": 1.5
+    },
+    {
+      "type": "heater_stuck_on",
+      "name": "survival_heater_stuck_on",
+      "start_minute": 420,
+      "thermal_bias_w": 8.0
+    }
+  ]
+}
+
