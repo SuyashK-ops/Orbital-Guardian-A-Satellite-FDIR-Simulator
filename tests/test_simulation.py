@@ -3,9 +3,11 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from orbital_guardian.batch import run_scenario_directory  # noqa: E402
 from orbital_guardian.config import (  # noqa: E402
     FDIRConfig,
     FaultConfig,
@@ -69,6 +71,18 @@ class SimulationSmokeTests(unittest.TestCase):
         self.assertIn("load_spike", {fault for sample in result.telemetry for fault in sample.active_faults})
         self.assertTrue({"charging", "safe"} & recommended_modes)
         self.assertTrue(any(event.category == "fault_activated" for event in result.events))
+
+    def test_batch_runner_writes_comparison_outputs(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "batch_outputs"
+            results = run_scenario_directory("configs", output_dir, save_plots=False)
+
+            self.assertGreaterEqual(len(results), 4)
+            self.assertTrue((output_dir / "comparison.json").exists())
+            self.assertTrue((output_dir / "comparison.csv").exists())
+            self.assertTrue(
+                all((output_dir / result.scenario_name.lower().replace(" ", "_")).exists() for result in results)
+            )
 
 
 if __name__ == "__main__":

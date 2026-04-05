@@ -1,91 +1,113 @@
 # Orbital Guardian
 
-Orbital Guardian is a portfolio-oriented small-satellite Fault Detection, Isolation, and Recovery (FDIR) simulator. The project is intentionally scoped as a realistic systems-engineering exercise rather than a high-fidelity mission tool: it models coupled power, thermal, and attitude-related behavior over time; injects subsystem faults through configuration; and applies rule-based FDIR logic to decide when the spacecraft should degrade gracefully, enter charging mode, or fall back to safe mode.
+Orbital Guardian is a small-satellite Fault Detection, Isolation, and Recovery (FDIR) simulator. It models simplified spacecraft power, thermal, and reaction-wheel behavior over time, injects configurable faults, and applies rule-based FDIR logic to detect anomalies, estimate likely causes, and trigger recovery responses such as charging mode or safe mode.
 
-The goal is to show aerospace systems thinking in code:
+## Features
 
-- satellite subsystems interact and compete for limited resources
-- nominal telemetry thresholds are not enough on their own
-- detection, isolation, and recovery are distinct engineering functions
-- autonomy has tradeoffs around uncertainty, robustness, and false positives
-- operational modes matter because spacecraft do not respond to all anomalies the same way
-
-## What This MVP Already Does
-
-- simulates a small satellite in discrete time steps
-- models sunlight/eclipse cycling with orbit-phase-dependent solar generation
-- tracks battery state of charge, bus voltage, thermal state, and reaction-wheel speed
-- supports mission mode scheduling across `nominal`, `science`, `charging`, `degraded`, and `safe`
-- injects faults from JSON scenario files
-- runs a lightweight rule-based FDIR controller
-- logs fault activations, mode changes, detections, and recovery actions
-- exports telemetry, event logs, and scenario summaries
-- optionally generates portfolio-ready plots
-- includes notebooks for exploratory runs and scenario comparison
+- time-stepped spacecraft simulation
+- sunlight and eclipse cycling
+- battery state-of-charge and bus power tracking
+- first-order thermal model with heater behavior
+- operational modes: `nominal`, `science`, `charging`, `degraded`, `safe`
+- config-driven fault injection
+- rule-based FDIR detection, isolation, and recovery
+- telemetry export, event logs, summary files, and plots
+- single-scenario and batch scenario execution from the CLI
 
 ## Repository Layout
 
 ```text
-configs/                  Scenario definitions for nominal and faulted runs
-docs/                     Architecture notes and staged roadmap
-notebooks/                Main analysis and demo notebooks
+configs/                  Scenario definitions
+docs/                     Architecture notes and roadmap
+notebooks/                Main notebooks for running and comparing scenarios
+outputs/                  Generated run artifacts
 src/orbital_guardian/     Simulator package
-tests/                    Baseline regression tests
-outputs/                  Generated plots, telemetry, and summaries
+tests/                    Automated tests
 ```
 
-## Engineering Scope
+## Subsystem Scope
 
-This project uses simplified but purposeful models:
+Current models include:
 
-- `Power subsystem`: solar generation, eclipse losses, load variation by mode, battery charge/discharge
-- `Thermal subsystem`: first-order energy balance with internal electrical heating, solar heating, eclipse cooling, and heater behavior
-- `Attitude / operations`: reaction-wheel speed proxy, disturbance accumulation, mode-dependent momentum unloading
-- `Fault models`: degradations and anomalies that affect generation, load, thermal behavior, sensors, and wheel dynamics
-- `FDIR`: alerting, heuristic isolation, and autonomous recovery recommendations
+- `power`: solar generation, eclipse periods, battery charging/discharging, and mode-dependent loads
+- `thermal`: first-order temperature response from internal loads, solar input, eclipse cooling, and heater effects
+- `attitude / operations`: reaction-wheel speed proxy with disturbance accumulation and mode-dependent unloading
+- `faults`: degradations and anomalies that affect generation, loads, telemetry, and wheel behavior
+- `fdir`: detection rules, heuristic fault isolation, and recovery-mode selection
 
-It is not attempting full orbital mechanics, full rigid-body attitude dynamics, electrochemistry, or radiation transport. The point is to build a serious systems project that is transparent, extensible, and defensible in an interview.
+## Included Scenarios
 
-## Quick Start
+- `configs/nominal.json`
+  Baseline reference case with no injected faults.
+- `configs/power_fault.json`
+  Solar-array degradation and unexpected load increase.
+- `configs/thermal_sensor_fault.json`
+  Temperature sensor drift and heater fault case.
+- `configs/fdir_demo.json`
+  Combined multi-fault scenario.
 
-### 1. Run from the CLI
+## Requirements
 
-From the repository root:
+- Python 3.11+
+- `matplotlib` for plot generation and notebook plotting
+
+Optional install from the repository root:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m orbital_guardian.cli --config configs/nominal.json --output-dir outputs/nominal --skip-plots
+python -m pip install matplotlib
 ```
 
-To generate plots as well, install `matplotlib` and remove `--skip-plots`.
+## How To Run
 
-### 2. Work from notebooks
+Run a single scenario from the repository root:
 
-Open one of the notebooks in `notebooks/`:
+```powershell
+$env:PYTHONPATH = "src"
+python -m orbital_guardian.cli --config configs/nominal.json --output-dir outputs/nominal
+```
 
-- `01_baseline_simulator.ipynb`
-- `02_fdir_scenario_comparison.ipynb`
+Run all scenario files in `configs/` as a batch:
 
-These notebooks are meant to be the main presentation layer for GitHub screenshots, portfolio walkthroughs, and future iteration.
+```powershell
+$env:PYTHONPATH = "src"
+python -m orbital_guardian.cli --config-dir configs --output-dir outputs/batch_run --skip-plots
+```
 
-## Scenario Files
+Use `--skip-plots` to skip image generation.
 
-Scenario configuration is JSON-based so the repo can grow through small, meaningful commits. Example scenarios included right now:
+## Files To Open Or Run
 
-- `configs/nominal.json`: baseline reference mission
-- `configs/power_fault.json`: solar degradation plus unexpected power draw
-- `configs/thermal_sensor_fault.json`: sensor drift plus heater fault
-- `configs/fdir_demo.json`: combined multi-fault demonstration
+- `src/orbital_guardian/cli.py`
+  Main command-line entry point.
+- `notebooks/01_baseline_simulator.ipynb`
+  Baseline simulator walkthrough.
+- `notebooks/02_fdir_scenario_comparison.ipynb`
+  Scenario comparison notebook.
+- `src/orbital_guardian/simulation.py`
+  Main simulation loop.
+- `src/orbital_guardian/fdir/logic.py`
+  Detection, isolation, and recovery logic.
+- `tests/test_simulation.py`
+  Basic automated test coverage.
 
-Each scenario can define:
+## Outputs
 
-- simulation duration, step size, orbit period, and sunlight fraction
-- scheduled mission modes
-- subsystem parameters
-- FDIR thresholds
-- a list of injected faults with start times and parameters
+Single-scenario runs write files such as:
 
-## Current Fault Library
+- `summary.json`
+- `summary.md`
+- `events.json`
+- `telemetry.csv`
+- `timeseries.png`
+- `timeline.png`
+
+Batch runs also write:
+
+- `comparison.json`
+- `comparison.csv`
+
+## Fault Types
 
 - `solar_array_degradation`
 - `battery_degradation`
@@ -95,33 +117,15 @@ Each scenario can define:
 - `heater_stuck_on`
 - `load_spike`
 
-## FDIR Philosophy In This Project
+## Limitations
 
-The current FDIR layer is deliberately lightweight but structured like a real early-phase autonomy design:
+- single-node thermal model
+- simplified power subsystem dynamics
+- reaction-wheel speed used as an operational proxy instead of full attitude dynamics
+- rule-based FDIR instead of probabilistic or model-based diagnosis
+- no command sequencing or hardware interface layer
 
-1. `Detection`
-   Looks for suspicious patterns such as low state of charge, underperforming solar generation, power deficit, thermal limit exceedance, wheel-speed growth, or sensor residuals.
-2. `Isolation`
-   Uses heuristic scoring to estimate the most likely fault family rather than assuming a single threshold tells the whole story.
-3. `Recovery`
-   Recommends a mode response:
-   `charging` for power stress, `degraded` for uncertain sensor issues, and `safe` for critical thermal, wheel, or energy conditions.
+## Documentation
 
-That separation matters. A spacecraft can detect that something is wrong without knowing exactly why, and it can still choose a conservative recovery action while uncertainty remains.
-
-## Recommended Development Roadmap
-
-This repo is intentionally built to support milestone-style growth rather than one giant dump of functionality:
-
-1. `Phase 1`
-   Baseline simulator and telemetry outputs
-2. `Phase 2`
-   Expand the fault library and scenario coverage
-3. `Phase 3`
-   Improve FDIR with persistence logic, confidence handling, and better residual models
-4. `Phase 4`
-   Add batch scenario evaluation and quantitative performance metrics
-5. `Phase 5`
-   Polish documentation, tests, diagrams, logging, and presentation assets
-
-More detail lives in [docs/roadmap.md](docs/roadmap.md).
+- `docs/architecture.md`
+- `docs/roadmap.md`
